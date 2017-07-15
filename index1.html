@@ -21,7 +21,7 @@
       shape-rendering: crispEdges;
     }
 
-    .dot{
+    .dot,.legend rect{
       opacity: 0.4;
     }
 
@@ -136,7 +136,19 @@
           .attr("y", 9)
           .attr("dy", ".35em")
           .style("text-anchor", "end")
-          .text(function(d) { return d; });
+          .text(function(d) {
+
+            if (d == "R"){
+              return "Right hand";
+            }
+            if (d == "L") {
+              return "Left hand";
+            }
+            else {
+              return "Both hand"
+            };
+            
+          });
 
 
         }
