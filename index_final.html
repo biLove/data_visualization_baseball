@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <style>
+
+    h2{
+      text-align: center;
+    }
+
+    body{
+      text-align: center;
+      font: 12px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .dot,.legend rect{
+      opacity: 0.4;
+    }
+
+
+    </style>
+
+    <script type="text/javascript">
+      function draw(data) {
+
+      //set svg size
+      var margin = {top: 50, right: 20, bottom: 30, left: 40},
+      width = 1200 - margin.left - margin.right,
+      height = 700 - margin.top - margin.bottom;
+
+      //Set title.
+      d3.select("body")
+        .append("h2")
+        .text("Baseball Homer total score with height, weight and handedness.")
+
+
+      //find range of x axis.
+      var x = d3.scale.linear()
+      .range([0, width]);
+
+
+      //find range of x axis.
+      var y = d3.scale.linear()
+      .range([height, 0]);
+
+
+      // set circle color range
+      var color = d3.scale.category10();
+
+      // Create circle size scale
+      var r = d3.scale.sqrt()
+      .range([2,6]);
+
+      var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom");
+
+      var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left");
+
+      var svg = d3.select("body")
+        .append("svg")
+          .attr("width", width + margin.left+ margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+      x.domain(d3.extent(data, function(d) { return d.height; })).nice();
+      y.domain(d3.extent(data, function(d) { return d.weight; })).nice();
+      r.domain(d3.extent(data, function(d) { return d.HR; })).nice();
+
+      
+      // set x axis
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("x", width)
+          .attr("y", -6)
+          .style("text-anchor", "end")
+          .text("height ( inch )");
+
+      // set y axis
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("weight ( pound )")
+
+    
+      //set circles
+      svg.selectAll(".dot")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("class", "dot")
+      .attr("r",  function(d){return r(d.HR); })
+      .attr("cx", function(d){return x(d.height); })
+      .attr("cy", function(d){return y(d.weight); })
+      .style("fill", function(d){return color(d.handedness);});
+
+
+      // set the thumbnail.
+      var legend = svg.selectAll(".legend")
+      .data(color.domain())
+      .enter()
+      .append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i){return "translate(0," + i * 20 + ")"; });
+
+      legend.append("rect")
+          .attr("x", width - 35)
+          .attr("width", 18)
+          .attr("height", 18)
+          .style("fill", color);
+
+      legend.append("text")
+          .attr("x", width - 40)
+          .attr("y", 9)
+          .attr("dy", ".35em")
+          .style("text-anchor", "end")
+          .text(function(d) { 
+            if (d == "R"){
+              return "Right hand";
+            }
+            if (d == "L") {
+              return "Left hand";
+            }
+            else {
+              return "Both hand"
+            };
+
+          });
+
+
+        }
+
+
+    </script>
+  </head>
+<body>
+  <script type="text/javascript">
+
+  d3.csv("baseball_data.csv",draw);
+
+  </script>
+</body>
+</html>
