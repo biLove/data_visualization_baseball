@@ -28,7 +28,7 @@
     div.handedness_button{
       position: fixed;
       top: 100px;
-      left: 100px;
+      right: 200px;
     }
 
     div.handedness_button div{
@@ -39,6 +39,11 @@
 
     .note{
       color: gray;
+      font: 12px sans-serif;
+    }
+
+    .information{
+      color: black;
       font: 12px sans-serif;
     }
 
@@ -144,8 +149,41 @@
         .attr("cy", function(d){return y(d.weight); })
         .attr("rx",  function(d){return rx(d.HR); })
         .attr("ry",  function(d){return ry(d.avg); })
-        .style("fill", function(d){return color(d.handedness);});
+        .style("fill", function(d){return color(d.handedness);})
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", handleMouseOut);
       };
+
+      // 鼠标悬浮在椭圆上方时，显示该椭圆的相关信息
+      function handleMouseOver(d, i){
+          
+        d3.select(this)
+          .style("rx", function(d){return rx(d.HR)*2; })
+          .style("ry", function(d){return ry(d.avg)*2; });
+        
+        svg.append("text")
+        .attr("id", "information")
+        .attr("x", function(){return x(d.height)-50; })
+        .attr("y", function(){return y(d.weight)-15; })
+        .text(function(){
+          var height = "height:" + d.height;
+          var weight = "weight:" + d.weight;
+          var avg = "avg:" + d.avg;
+          var HR = "HR:" + d.HR;
+          var str = String(height) + "\t" + String(weight) + "\t" + String(avg) + "\t" + String(HR);
+
+          return str;
+        });
+      }
+
+      // 鼠标移开时删除多余的信息
+      function handleMouseOut(d, i){
+        d3.select(this)
+        .style("rx", function(d){return rx(d.HR); })
+        .style("ry", function(d){return ry(d.avg); });
+
+        d3.selectAll("#information").remove();
+      }
 
       //画出所有的椭圆
       draw_point(data);
@@ -200,6 +238,7 @@
         return d;
       });
 
+      // 设置点击事件
       buttons.on("click", function(d){
         d3.select(".handedness_button")
           .selectAll("div")
@@ -217,6 +256,7 @@
       });
 
 
+      // 设置update函数，当点击按钮时，会按照此函数刷新数据
       function update(handedness) {
 
         if (handedness == "Right hand") {
