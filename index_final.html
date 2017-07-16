@@ -5,7 +5,7 @@
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <style>
 
-    h2{
+    h2,h3{
       text-align: center;
     }
 
@@ -25,6 +25,23 @@
       opacity: 0.4;
     }
 
+    div.handedness_button{
+      position: fixed;
+      top: 100px;
+      left: 100px;
+    }
+
+    div.handedness_button div{
+      background-color: rgb(251,201,127);
+      padding: 3px;
+      margin: 7px;
+    }
+
+    .note{
+      color: gray;
+      font: 12px sans-serif;
+    }
+
 
     </style>
 
@@ -39,8 +56,10 @@
       //Set title.
       d3.select("body")
         .append("h2")
-        .text("Baseball Homer total score with height, weight and handedness.")
+        .text("棒球选手全垒打得分、击球率与身高、体重、用手习惯的关系")
 
+      d3.select("body")
+        .append("h3")
 
       //find range of x axis.
       var x = d3.scale.linear()
@@ -52,11 +71,14 @@
       .range([height, 0]);
 
 
-      // set circle color range
+      // set ellipse color range
       var color = d3.scale.category10();
 
-      // Create circle size scale
-      var r = d3.scale.sqrt()
+      // Create ellipse size scale
+      var rx = d3.scale.sqrt()
+      .range([2,6]);
+
+      var ry = d3.scale.sqrt()
       .range([2,6]);
 
       var xAxis = d3.svg.axis()
@@ -77,7 +99,11 @@
 
       x.domain(d3.extent(data, function(d) { return d.height; })).nice();
       y.domain(d3.extent(data, function(d) { return d.weight; })).nice();
-      r.domain(d3.extent(data, function(d) { return d.HR; })).nice();
+      rx.domain(d3.extent(data, function(d) { return d.HR; })).nice();
+      ry.domain(d3.extent(data, function(d) { return d.avg; })).nice();
+
+
+      var handed = ["Right hand", "Left hand", "Both hand", "All"];
 
       
       // set x axis
@@ -104,20 +130,28 @@
           .style("text-anchor", "end")
           .text("weight ( pound )")
 
-    
-      //set circles
-      svg.selectAll(".dot")
-      .data(data)
-      .enter()
-      .append("circle")
-      .attr("class", "dot")
-      .attr("r",  function(d){return r(d.HR); })
-      .attr("cx", function(d){return x(d.height); })
-      .attr("cy", function(d){return y(d.weight); })
-      .style("fill", function(d){return color(d.handedness);});
+
+      // 设置画椭圆的函数
+      function draw_point(draw_data){
+        svg.selectAll("ellipse").remove();
+
+        svg.selectAll(".dot")
+        .data(draw_data)
+        .enter()
+        .append("ellipse")
+        .attr("class", "dot")
+        .attr("cx", function(d){return x(d.height); })
+        .attr("cy", function(d){return y(d.weight); })
+        .attr("rx",  function(d){return rx(d.HR); })
+        .attr("ry",  function(d){return ry(d.avg); })
+        .style("fill", function(d){return color(d.handedness);});
+      };
+
+      //画出所有的椭圆
+      draw_point(data);
 
 
-      // set the thumbnail.
+      // 设置图例
       var legend = svg.selectAll(".legend")
       .data(color.domain())
       .enter()
@@ -149,8 +183,69 @@
 
           });
 
+      d3.select("body")
+        .append("div")
+        .attr("class", "note")
+        .text("备注：椭圆横向半径代表全垒得分大小，纵向半径代表击球率大小。")
 
+      //添加按钮
+      var buttons = d3.select("body")
+      .append("div")
+      .attr("class", "handedness_button")
+      .selectAll("div")
+      .data(handed)
+      .enter()
+      .append("div")
+      .text(function(d){
+        return d;
+      });
+
+      buttons.on("click", function(d){
+        d3.select(".handedness_button")
+          .selectAll("div")
+          .transition()
+          .duration(500)
+          .style("color", "black")
+          .style("background", "rgb(251, 201, 127)");
+          
+        d3.select(this)
+          .transition()
+          .duration(500)
+          .style("background", "lightBlue")
+          .style("color", "white");
+        update(d);
+      });
+
+
+      function update(handedness) {
+
+        if (handedness == "Right hand") {
+          hand = "R";
+        } 
+        else if (handedness == "Left hand") {
+          hand = "L";
+        } 
+        else if (handedness == "Both hand") {
+          hand = "B";
+        } 
+        else { 
+          hand = "All";
         }
+        
+        function filtered(tmp_data){
+          return data.filter(function(d){
+            return d.handedness == tmp_data;
+        });}
+
+        if (hand == "All"){
+          draw_point(data);
+        }
+        else {
+          draw_point(filtered(hand));
+        }
+      }
+
+    }
 
 
     </script>
