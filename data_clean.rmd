@@ -1,0 +1,36 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+读取原文件
+```{r}
+pf <- read.csv("baseball_data.csv")
+table(pf$handedness)
+```
+
+去掉数据中avg=0或HR=0的数据
+```{r}
+pf1 <- subset(pf, avg >0 & HR >0)
+table(pf1$handedness)
+```
+
+将数据按照height、weight、hannedness进行分组，并将avg、HR求平均，计算组内数据个数
+```{r}
+library(dplyr)
+
+new_data <- pf1 %>% 
+  group_by(height, weight, handedness) %>% 
+  summarise(avg = signif(mean(avg), digits = 3), 
+            HR = median(HR), 
+            n = n()) %>%
+  arrange(height)
+
+new_data
+```
+
+### 将new_data写到新的csv文件中
+```{r}
+write.csv(new_data, file = "new_baseball_data.csv")
+```
+
